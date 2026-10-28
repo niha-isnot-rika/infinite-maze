@@ -2,6 +2,18 @@
 
 Infinite maze game to play whenever you are free.
 
+> ### 🎮 **[CLICK HERE TO PLAY THE GAME NOW](https://niha-isnot-rika.github.io/infinite-maze/)**
+> **100% Permanently Hosted on GitHub Pages — Runs instantly in your browser on desktop & mobile!**
+
+<p align="center">
+  <a href="https://niha-isnot-rika.github.io/infinite-maze/" target="_blank">
+    <img src="https://img.shields.io/badge/▶%EF%B8%8F%20PLAY%20NOW-ONLINE%20GAME-00e5ff?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Play Game Now" height="42">
+  </a>
+  <a href="https://niha-isnot-rika.github.io/infinite-maze/" target="_blank">
+    <img src="https://img.shields.io/badge/STATUS-PERMANENTLY%20HOSTED%20(24%2F7)-00FF66?style=for-the-badge&logo=github&logoColor=black" alt="Hosting Status" height="42">
+  </a>
+</p>
+
 An endless, procedurally generated minimalist labyrinth game. Guaranteed solvable, highly complex, with live timers, dynamic lighting, camera follow modes, and continuous progression.
 
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-E34F26?style=flat&logo=html5&logoColor=white)
@@ -12,6 +24,7 @@ An endless, procedurally generated minimalist labyrinth game. Guaranteed solvabl
 
 ## ✨ Features
 
+- **Permanent 24/7 Hosting**: Available anytime worldwide at [`niha-isnot-rika.github.io/infinite-maze`](https://niha-isnot-rika.github.io/infinite-maze/).
 - **Procedural Maze Generation**: Uses depth-first recursive backtracker algorithms ensuring every maze is mathematically guaranteed solvable with high branching entropy.
 - **Continuous Progression**: Solved a maze? Instantly warp into the next level with scaling difficulty and larger grid sizes.
 - **Dynamic Lighting & Trails**: Atmospheric glow, path particle trails, and interactive illumination.
@@ -35,10 +48,9 @@ An endless, procedurally generated minimalist labyrinth game. Guaranteed solvabl
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Run Locally (Optional)
 
-### 1. Clone & Run Locally
-No heavy dependencies needed! Pure native Node.js:
+No external dependencies needed:
 
 ```bash
 # Clone the repository
@@ -52,14 +64,6 @@ npm start
 ```
 
 Open your browser at **`http://localhost:3000`**.
-
----
-
-## 🌐 Play Online / Deployment
-This game is a pure static web app (HTML5 / Canvas / Vanilla JS / CSS). You can host it on **GitHub Pages**:
-1. Go to repository **Settings** > **Pages**.
-2. Select branch `main` and root `/`.
-3. Save to get a free live URL: `https://niha-isnot-rika.github.io/infinite-maze/`!
 
 ---
 
