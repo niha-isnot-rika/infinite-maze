@@ -1,0 +1,14 @@
+{
+  "name": "aethermaze",
+  "version": "1.0.0",
+  "description": "Minimalist Endless Labyrinth Game",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_maze.js"
+  },
+  "keywords": ["maze", "game", "canvas", "procedural"],
+  "author": "",
+  "license": "MIT"
+}

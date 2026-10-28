@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AetherMaze — Minimalist Endless Labyrinth</title>
+  <meta name="description" content="An endless, procedurally generated minimalist maze game. Guaranteed solvable, highly complex, with live timers and continuous progression.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Minimalist HUD -->
+    <header class="top-hud">
+      <div class="brand">
+        <span class="brand-icon">🌀</span>
+        <span class="brand-title">AETHER</span>
+      </div>
+
+      <div class="stat-item accent-solved">
+        <span class="stat-label">Mazes Solved</span>
+        <span id="solvedCount" class="stat-value">0</span>
+      </div>
+
+      <div class="stat-item highlight-stat">
+        <span class="stat-label">Total Time</span>
+        <span id="totalTimer" class="stat-value">00:00.0</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-label">Current Maze</span>
+        <span id="mazeTimer" class="stat-value">00:00.0</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-label">Level</span>
+        <span id="mazeNumber" class="stat-value">#1</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-label">Grid</span>
+        <span id="mazeDim" class="stat-value">21×21</span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-label">Steps / Opt</span>
+        <span class="stat-value"><span id="stepCounter">0</span>/<span id="optimalSteps">-</span></span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-label">Best Streak</span>
+        <span id="bestStreak" class="stat-value">0</span>
+      </div>
+    </header>
+
+    <!-- Canvas Viewport -->
+    <main class="canvas-wrapper">
+      <canvas id="mazeCanvas"></canvas>
+    </main>
+
+    <!-- Virtual D-Pad for Touch/Mobile -->
+    <div class="touch-dpad">
+      <button class="dpad-btn" id="dpadUp" aria-label="Up">▲</button>
+      <button class="dpad-btn" id="dpadLeft" aria-label="Left">◀</button>
+      <button class="dpad-btn" id="dpadRight" aria-label="Right">▶</button>
+      <button class="dpad-btn" id="dpadDown" aria-label="Down">▼</button>
+    </div>
+
+    <!-- Bottom Floating Toolbar -->
+    <footer class="bottom-hud">
+      <button id="btnCamera" class="btn-pill" title="Toggle camera mode (Space / C)">🔍 Follow</button>
+      <button id="btnHint" class="btn-pill" title="Toggle shortest path hint (H)">💡 Hint</button>
+      <button id="btnTheme" class="btn-pill" title="Cycle visual themes (T)">🎨 Obsidian Void</button>
+      <button id="btnSound" class="btn-pill" title="Toggle audio sound FX (M)">🔊 Sound On</button>
+      <button id="btnReset" class="btn-pill" title="Restart current maze (R)">🔄 Restart</button>
+      <button id="btnHelp" class="btn-pill" title="Help & Shortcuts (?)">❓ Controls</button>
+    </footer>
+
+    <!-- Help & Info Modal -->
+    <div id="helpModal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🌀 Endless Labyrinth</h2>
+          <button id="closeHelp" class="btn-close" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Navigate the glowing orb from the green start point to the pulsing portal exit. As soon as you solve one maze, you immediately warp into the next unique, procedurally generated maze!</p>
+          
+          <h3>Controls</h3>
+          <ul class="shortcut-list">
+            <li><span>Move</span> <span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>Arrow Keys</kbd></span></li>
+            <li><span>Toggle Camera</span> <span><kbd>Space</kbd> or <kbd>C</kbd></span></li>
+            <li><span>Path Hint</span> <span><kbd>H</kbd></span></li>
+            <li><span>Switch Theme</span> <span><kbd>T</kbd></span></li>
+            <li><span>Toggle Sound</span> <span><kbd>M</kbd></span></li>
+            <li><span>Restart Maze</span> <span><kbd>R</kbd></span></li>
+          </ul>
+
+          <h3>Guaranteed Solvability</h3>
+          <p>Each maze uses spanning-tree depth-first branch generation, mathematically guaranteeing that every single maze has a valid, unbroken path to the exit, with maximal topological distance between start and finish.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
