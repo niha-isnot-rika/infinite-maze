@@ -89,7 +89,7 @@ export class MazeRenderer {
     this.targetZoom = 1;
     this.targetCamX = 0;
     this.targetCamY = 0;
-    this.cameraMode = 'follow'; // 'follow' or 'overview'
+    this.cameraMode = 'overview'; // Default to 'overview' (Fit to screen)
 
     // Visual animation particles
     this.particles = [];
@@ -102,6 +102,14 @@ export class MazeRenderer {
 
     this.resize();
     window.addEventListener('resize', () => this.resize());
+  }
+
+  snapCamera(player, maze) {
+    if (!maze) return;
+    this.update(0.016, player, maze);
+    this.camX = this.targetCamX;
+    this.camY = this.targetCamY;
+    this.zoom = this.targetZoom;
   }
 
   setTheme(themeKey) {
@@ -174,29 +182,40 @@ export class MazeRenderer {
 
     if (!maze) return;
 
-    // Calculate cell dimensions
-    const minDim = Math.min(this.width, this.height);
-    const cellSize = Math.max(16, Math.min(48, Math.floor((minDim * 0.85) / Math.max(maze.cols, maze.rows))));
-    this.cellSize = cellSize;
+    // Responsive bounds calculations: guarantee maze fits without clipping HUDs
+    const isMobile = this.width < 768;
+    const marginX = isMobile ? 18 : 48;
+    const marginTop = isMobile ? 68 : 84;
+    const marginBottom = isMobile ? 120 : 84;
 
-    const mazePixelW = maze.cols * cellSize;
-    const mazePixelH = maze.rows * cellSize;
+    const availW = Math.max(120, this.width - marginX * 2);
+    const availH = Math.max(120, this.height - (marginTop + marginBottom));
+
+    // Cell size that fits inside available window
+    const maxCellW = availW / maze.cols;
+    const maxCellH = availH / maze.rows;
+    const fitCellSize = Math.max(8, Math.floor(Math.min(maxCellW, maxCellH)));
+    this.cellSize = fitCellSize;
+
+    const mazePixelW = maze.cols * fitCellSize;
+    const mazePixelH = maze.rows * fitCellSize;
 
     if (this.cameraMode === 'overview') {
-      const scaleX = (this.width * 0.88) / mazePixelW;
-      const scaleY = (this.height * 0.82) / mazePixelH;
-      this.targetZoom = Math.min(scaleX, scaleY, 1.2);
+      // Fit to screen: show entire maze with perfect framing
+      this.targetZoom = 1.0;
       this.targetCamX = mazePixelW / 2;
-      this.targetCamY = mazePixelH / 2;
+      // Vertically center inside available space between HUDs
+      const yOffset = (marginTop - marginBottom) / 2;
+      this.targetCamY = (mazePixelH / 2) + yOffset;
     } else {
-      // Follow mode
-      this.targetZoom = Math.max(1.1, Math.min(2.2, 40 / cellSize));
-      this.targetCamX = (player.interpolatedX + 0.5) * cellSize;
-      this.targetCamY = (player.interpolatedY + 0.5) * cellSize;
+      // Follow mode: zoomed in on player
+      this.targetZoom = Math.max(1.8, Math.min(2.8, 52 / fitCellSize));
+      this.targetCamX = (player.interpolatedX + 0.5) * fitCellSize;
+      this.targetCamY = (player.interpolatedY + 0.5) * fitCellSize;
     }
 
     // Smooth camera interpolation
-    const lerpRate = 0.12;
+    const lerpRate = 0.14;
     this.camX += (this.targetCamX - this.camX) * lerpRate;
     this.camY += (this.targetCamY - this.camY) * lerpRate;
     this.zoom += (this.targetZoom - this.zoom) * lerpRate;

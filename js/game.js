@@ -44,7 +44,8 @@ class EndlessMazeGame {
     this.bestStreak = parseInt(localStorage.getItem('aether_best_streak') || '0', 10);
     this.totalMazesSolved = parseInt(localStorage.getItem('aether_total_solved') || '0', 10);
     this.savedTheme = localStorage.getItem('aether_theme') || 'obsidian';
-    this.savedCameraMode = localStorage.getItem('aether_camera') || 'follow';
+    // Default camera mode is 'overview' (Fit to screen)
+    this.savedCameraMode = localStorage.getItem('aether_camera_v2') || 'overview';
 
     this.renderer.setTheme(this.savedTheme);
     this.renderer.cameraMode = this.savedCameraMode;
@@ -216,6 +217,9 @@ class EndlessMazeGame {
     this.renderer.showHint = false;
     this.updateSolutionHint();
 
+    // Instantly snap camera to fit screen on maze start
+    this.renderer.snapCamera(this.player, this.maze);
+
     if (isProgression) {
       this.renderer.transitionEffect = 1.0;
     }
@@ -322,10 +326,10 @@ class EndlessMazeGame {
 
   toggleCameraMode() {
     sound.playClick();
-    this.renderer.cameraMode = this.renderer.cameraMode === 'follow' ? 'overview' : 'follow';
-    localStorage.setItem('aether_camera', this.renderer.cameraMode);
+    this.renderer.cameraMode = this.renderer.cameraMode === 'overview' ? 'follow' : 'overview';
+    localStorage.setItem('aether_camera_v2', this.renderer.cameraMode);
     if (this.btnCamera) {
-      this.btnCamera.textContent = this.renderer.cameraMode === 'follow' ? '🔍 Follow' : '🗺️ Overview';
+      this.btnCamera.textContent = this.renderer.cameraMode === 'overview' ? '🔍 Follow Player' : '🗺️ Fit to Screen';
     }
   }
 
@@ -374,7 +378,7 @@ class EndlessMazeGame {
     if (this.uiOptimal && this.maze) this.uiOptimal.textContent = (this.maze.solutionLength - 1) || '-';
     if (this.uiStreak) this.uiStreak.textContent = this.bestStreak;
     if (this.btnCamera) {
-      this.btnCamera.textContent = this.renderer.cameraMode === 'follow' ? '🔍 Follow' : '🗺️ Overview';
+      this.btnCamera.textContent = this.renderer.cameraMode === 'overview' ? '🔍 Follow Player' : '🗺️ Fit to Screen';
     }
     if (this.btnTheme) {
       this.btnTheme.textContent = `🎨 ${this.renderer.theme.name}`;
