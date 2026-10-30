@@ -25,12 +25,14 @@ An endless, procedurally generated minimalist labyrinth game. Guaranteed solvabl
 ## ✨ Features
 
 - **Permanent 24/7 Hosting**: Available anytime worldwide at [`niha-isnot-rika.github.io/infinite-maze`](https://niha-isnot-rika.github.io/infinite-maze/).
+- **Expansive Side-Cockpit Layout**: Sidebars utilize the space on either side of the screen rather than top and bottom, giving the maze canvas full vertical viewport height.
+- **Stopwatch Lap Splits ("Clock Laps")**: Live stopwatch resets on every new maze and logs completed runs into the side panel with lap times, step counts, and a `⚡ BEST` badge for your fastest run.
+- **5-Second Fading Hint**: Pressing Hint shows the shortest path at full brightness for 3.5 seconds, then smoothly fades out over the last 1.5 seconds. The Hint button locks with an active countdown timer.
+- **High-Contrast Walls & Distinct Characters**: Noticeably thicker walls with strong contrast in all themes. The player has a continuous pulsing sonar wave ring, and the finish is an animated 8-point rotating crystalline star portal.
+- **8 Visual Themes (Light, Dark & Extras)**: Obsidian Void, Cyberpunk Neon, Emerald Matrix, Solar Flare, Pure Light (Light), Nordic Sand (Light), Monochrome Slate, and Synthwave Sunset.
 - **Procedural Maze Generation**: Uses depth-first recursive backtracker algorithms ensuring every maze is mathematically guaranteed solvable with high branching entropy.
 - **Continuous Progression**: Solved a maze? Instantly warp into the next level with scaling difficulty and larger grid sizes.
-- **Dynamic Lighting & Trails**: Atmospheric glow, path particle trails, and interactive illumination.
-- **Shortest Path Solver & Hint System**: Built-in BFS algorithm calculates the optimal path and step count.
 - **Procedural Web Audio FX**: Synthesizer sound effects generated in real-time via the Web Audio API (no external sound files required).
-- **Multiple Color Themes**: Obsidian Void, Cyber Neon, Solar Ember, Emerald Matrix, and Royal Nebula.
 - **Mobile & Touch Friendly**: On-screen directional D-Pad controls with smooth responsive viewport scaling.
 
 ---
@@ -40,9 +42,9 @@ An endless, procedurally generated minimalist labyrinth game. Guaranteed solvabl
 | Action | Keybinding |
 | :--- | :--- |
 | **Move Orb** | `W`, `A`, `S`, `D` or `Arrow Keys` (or on-screen D-Pad) |
-| **Toggle Camera Mode** | `Space` or `C` (Follow Player / Overview) |
-| **Toggle Shortest Path Hint** | `H` |
-| **Switch Visual Theme** | `T` |
+| **5-Second Fading Hint** | `H` |
+| **Toggle Camera Mode** | `Space` or `C` (Follow Player / Fit to Screen) |
+| **Switch Visual Theme** | `T` or top-right theme menu |
 | **Toggle Sound FX** | `M` |
 | **Restart Current Maze** | `R` |
 
