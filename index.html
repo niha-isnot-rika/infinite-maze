@@ -4,59 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AetherMaze — Minimalist Endless Labyrinth</title>
-  <meta name="description" content="An endless, procedurally generated minimalist maze game. Guaranteed solvable, highly complex, with live timers and continuous progression.">
+  <meta name="description" content="An endless, procedurally generated minimalist maze game with high-contrast visuals, live lap timer, custom themes, and intelligent hint pathing.">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
 </head>
 <body>
-  <div id="app">
-    <!-- Top Minimalist HUD -->
-    <header class="top-hud">
-      <div class="brand">
+  <div id="app" class="cockpit-layout">
+
+    <!-- Mobile Top Navigation Bar (Active on narrow viewports) -->
+    <header class="mobile-top-bar">
+      <div class="mobile-brand">
         <span class="brand-icon">🌀</span>
         <span class="brand-title">AETHER</span>
       </div>
-
-      <div class="stat-item accent-solved">
-        <span class="stat-label">Mazes Solved</span>
-        <span id="solvedCount" class="stat-value">0</span>
+      <div class="mobile-center-stat">
+        <span class="mobile-level" id="mobileMazeNumber">#1</span>
+        <span class="mobile-timer" id="mobileMazeTimer">00:00.0</span>
       </div>
-
-      <div class="stat-item highlight-stat">
-        <span class="stat-label">Total Time</span>
-        <span id="totalTimer" class="stat-value">00:00.0</span>
-      </div>
-
-      <div class="stat-item">
-        <span class="stat-label">Current Maze</span>
-        <span id="mazeTimer" class="stat-value">00:00.0</span>
-      </div>
-
-      <div class="stat-item">
-        <span class="stat-label">Level</span>
-        <span id="mazeNumber" class="stat-value">#1</span>
-      </div>
-
-      <div class="stat-item">
-        <span class="stat-label">Grid</span>
-        <span id="mazeDim" class="stat-value">21×21</span>
-      </div>
-
-      <div class="stat-item">
-        <span class="stat-label">Steps / Opt</span>
-        <span class="stat-value"><span id="stepCounter">0</span>/<span id="optimalSteps">-</span></span>
-      </div>
-
-      <div class="stat-item">
-        <span class="stat-label">Best Streak</span>
-        <span id="bestStreak" class="stat-value">0</span>
+      <div class="mobile-actions">
+        <button id="btnMobileLaps" class="btn-mobile-pill" aria-label="Toggle Laps">⏱️</button>
+        <button id="btnMobileSound" class="btn-mobile-pill" aria-label="Toggle Sound">🔊</button>
       </div>
     </header>
 
-    <!-- Canvas Viewport -->
+    <!-- LEFT SIDEBAR: Live Maze Status & Clock Lap Splits -->
+    <aside class="sidebar sidebar-left" id="sidebarLeft">
+      <!-- Brand Header -->
+      <div class="panel-card brand-card">
+        <div class="brand">
+          <span class="brand-icon">🌀</span>
+          <div class="brand-text">
+            <h1 class="brand-title">AETHER</h1>
+            <span class="brand-subtitle">Endless Labyrinth</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Live Lap / Maze Stopwatch Card -->
+      <div class="panel-card timer-card">
+        <div class="card-header">
+          <span class="card-badge pulse-badge">LIVE LAP</span>
+          <span class="badge-accent" id="mazeNumber">#1</span>
+        </div>
+        <div class="timer-display-wrap">
+          <div id="mazeTimer" class="timer-digits">00:00.0</div>
+          <span class="timer-caption">Current Maze Stopwatch</span>
+        </div>
+        <div class="timer-stats-grid">
+          <div class="mini-stat">
+            <span class="mini-label">GRID</span>
+            <span id="mazeDim" class="mini-value">21×21</span>
+          </div>
+          <div class="mini-stat">
+            <span class="mini-label">STEPS / OPT</span>
+            <span class="mini-value"><span id="stepCounter">0</span>/<span id="optimalSteps">-</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maze Laps Panel (Lap history like a stopwatch clock) -->
+      <div class="panel-card laps-card">
+        <div class="card-header">
+          <div class="header-title-group">
+            <span class="header-icon">⏱️</span>
+            <span class="card-title">MAZE LAPS</span>
+          </div>
+          <span id="lapCountBadge" class="card-badge">0 Laps</span>
+        </div>
+
+        <div class="laps-list-wrapper">
+          <div id="lapsEmptyState" class="laps-empty">
+            <span class="empty-icon">⏳</span>
+            <p>Complete a maze to record your first lap split!</p>
+          </div>
+          <div id="lapsList" class="laps-list"></div>
+        </div>
+
+        <div class="laps-footer">
+          <span class="footer-label">TOTAL TIME</span>
+          <span id="totalTimer" class="footer-value">00:00.0</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Canvas Viewport -->
     <main class="canvas-wrapper">
       <canvas id="mazeCanvas"></canvas>
     </main>
+
+    <!-- RIGHT SIDEBAR: Controls, Theme Picker & Achievements -->
+    <aside class="sidebar sidebar-right" id="sidebarRight">
+      <!-- Top Right Bar: Theme Picker next to Sound Button -->
+      <div class="panel-card top-actions-card">
+        <div class="top-actions-row">
+          <div class="theme-picker-group">
+            <label for="themeSelect" class="control-label">THEME</label>
+            <div class="select-wrapper">
+              <select id="themeSelect" class="theme-select" title="Choose Visual Theme">
+                <option value="obsidian">🌌 Obsidian Void</option>
+                <option value="neon">⚡ Cyberpunk Neon</option>
+                <option value="emerald">🌲 Emerald Matrix</option>
+                <option value="solar">☀️ Solar Flare</option>
+                <option value="pureLight">☀️ Pure Light</option>
+                <option value="nordicLight">🌿 Nordic Sand</option>
+                <option value="slate">🪙 Monochrome Slate</option>
+                <option value="sunset">🌅 Synthwave Sunset</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="btnSound" class="btn-top-sound" title="Toggle audio sound FX (M)">
+            <span id="soundIcon">🔊</span>
+            <span id="soundLabel">Sound</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons Card -->
+      <div class="panel-card actions-card">
+        <span class="section-label">ACTIONS</span>
+        <div class="actions-stack">
+          <!-- 5-Second Fading Hint Button with countdown & lock -->
+          <button id="btnHint" class="action-btn btn-hint" title="Show shortest path for 5 seconds (H)">
+            <span class="btn-icon">💡</span>
+            <span class="btn-text">Hint</span>
+          </button>
+
+          <button id="btnCamera" class="action-btn" title="Toggle camera mode (Space / C)">
+            <span class="btn-icon">🔍</span>
+            <span class="btn-text">Follow Player</span>
+          </button>
+
+          <button id="btnReset" class="action-btn" title="Restart current maze (R)">
+            <span class="btn-icon">🔄</span>
+            <span class="btn-text">Restart Maze</span>
+          </button>
+
+          <button id="btnHelp" class="action-btn" title="Help & Shortcuts (?)">
+            <span class="btn-icon">❓</span>
+            <span class="btn-text">Controls</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Session Progress & Stats Card -->
+      <div class="panel-card progress-card">
+        <span class="section-label">SESSION STATS</span>
+        <div class="stats-row">
+          <div class="stat-box">
+            <span class="stat-num" id="solvedCount">0</span>
+            <span class="stat-caption">SOLVED</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" id="bestStreak">0</span>
+            <span class="stat-caption">BEST STREAK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcut Reference Card -->
+      <div class="panel-card keys-card">
+        <span class="section-label">SHORTCUTS</span>
+        <div class="keys-grid">
+          <span class="key-item"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</span>
+          <span class="key-item"><kbd>H</kbd> 5s Hint</span>
+          <span class="key-item"><kbd>C</kbd> Camera</span>
+          <span class="key-item"><kbd>R</kbd> Restart</span>
+          <span class="key-item"><kbd>T</kbd> Theme</span>
+          <span class="key-item"><kbd>M</kbd> Sound</span>
+        </div>
+      </div>
+    </aside>
 
     <!-- Virtual D-Pad for Touch/Mobile -->
     <div class="touch-dpad">
@@ -66,17 +184,14 @@
       <button class="dpad-btn" id="dpadDown" aria-label="Down">▼</button>
     </div>
 
-    <!-- Bottom Floating Toolbar -->
-    <footer class="bottom-hud">
-      <button id="btnCamera" class="btn-pill" title="Toggle camera mode: Fit to Screen vs Follow (Space / C)">🔍 Follow Player</button>
-      <button id="btnHint" class="btn-pill" title="Toggle shortest path hint (H)">💡 Hint</button>
-      <button id="btnTheme" class="btn-pill" title="Cycle visual themes (T)">🎨 Obsidian Void</button>
-      <button id="btnSound" class="btn-pill" title="Toggle audio sound FX (M)">🔊 Sound On</button>
-      <button id="btnReset" class="btn-pill" title="Restart current maze (R)">🔄 Restart</button>
-      <button id="btnHelp" class="btn-pill" title="Help & Shortcuts (?)">❓ Controls</button>
-    </footer>
+    <!-- Mobile Floating Action Bar (Mobile Viewport Only) -->
+    <div class="mobile-bottom-bar">
+      <button id="btnMobileHint" class="btn-mobile-action">💡 Hint</button>
+      <button id="btnMobileCamera" class="btn-mobile-action">🔍 Camera</button>
+      <button id="btnMobileReset" class="btn-mobile-action">🔄 Reset</button>
+    </div>
 
-    <!-- Help & Info Modal -->
+    <!-- Help & Controls Modal -->
     <div id="helpModal" class="modal-backdrop hidden">
       <div class="modal-card">
         <div class="modal-header">
@@ -84,20 +199,23 @@
           <button id="closeHelp" class="btn-close" aria-label="Close modal">✕</button>
         </div>
         <div class="modal-body">
-          <p>Navigate the glowing orb from the green start point to the pulsing portal exit. As soon as you solve one maze, you immediately warp into the next unique, procedurally generated maze!</p>
+          <p>Guide your pulsing orb from the green start pad to the spinning diamond portal exit. As soon as you step into the portal, the stopwatch records your lap and warps you into the next procedural labyrinth!</p>
           
           <h3>Controls</h3>
           <ul class="shortcut-list">
             <li><span>Move</span> <span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>Arrow Keys</kbd></span></li>
+            <li><span>5-Second Hint</span> <span><kbd>H</kbd></span></li>
             <li><span>Toggle Camera</span> <span><kbd>Space</kbd> or <kbd>C</kbd></span></li>
-            <li><span>Path Hint</span> <span><kbd>H</kbd></span></li>
             <li><span>Switch Theme</span> <span><kbd>T</kbd></span></li>
             <li><span>Toggle Sound</span> <span><kbd>M</kbd></span></li>
             <li><span>Restart Maze</span> <span><kbd>R</kbd></span></li>
           </ul>
 
-          <h3>Guaranteed Solvability</h3>
-          <p>Each maze uses spanning-tree depth-first branch generation, mathematically guaranteeing that every single maze has a valid, unbroken path to the exit, with maximal topological distance between start and finish.</p>
+          <h3>5-Second Fading Hint</h3>
+          <p>Clicking Hint displays the optimal path at full brightness for 3.5 seconds, then smoothly fades out over the last 1.5 seconds. The Hint button locks with a live countdown during the hint.</p>
+
+          <h3>Clock Lap Splits</h3>
+          <p>Every time you conquer a maze, your lap time and step count are logged in the side panel just like a stopwatch lap tracker, highlighting your fastest runs!</p>
         </div>
       </div>
     </div>
@@ -106,3 +224,4 @@
   <script type="module" src="js/game.js"></script>
 </body>
 </html>
+

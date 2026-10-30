@@ -18,7 +18,16 @@ class EndlessMazeGame {
     this.isPaused = false;
     this.isTransitioning = false;
 
-    // Difficulty settings
+    // Lap Splits History (Clock Lap Tracker)
+    this.laps = [];
+
+    // 5-Second Fading Hint State
+    this.hintDuration = 5.0;
+    this.hintFadeDuration = 1.5; // Final 1.5s fades smoothly to 0
+    this.hintRemaining = 0;
+    this.isHintActive = false;
+
+    // Difficulty settings (unchanged generation parameters)
     this.baseSize = 21;
     this.currentCols = 21;
     this.currentRows = 21;
@@ -44,15 +53,16 @@ class EndlessMazeGame {
     this.bestStreak = parseInt(localStorage.getItem('aether_best_streak') || '0', 10);
     this.totalMazesSolved = parseInt(localStorage.getItem('aether_total_solved') || '0', 10);
     this.savedTheme = localStorage.getItem('aether_theme') || 'obsidian';
-    // Default camera mode is 'overview' (Fit to screen)
     this.savedCameraMode = localStorage.getItem('aether_camera_v2') || 'overview';
 
-    this.renderer.setTheme(this.savedTheme);
     this.renderer.cameraMode = this.savedCameraMode;
 
     // UI Elements
     this.bindUIElements();
     this.bindInputs();
+
+    // Set initial theme & CSS variables
+    this.applyTheme(this.savedTheme);
 
     // Start First Maze
     this.initNewMaze(false);
@@ -62,6 +72,7 @@ class EndlessMazeGame {
   }
 
   bindUIElements() {
+    // Left Sidebar / Status
     this.uiSolvedCount = document.getElementById('solvedCount');
     this.uiTotalTimer = document.getElementById('totalTimer');
     this.uiMazeTimer = document.getElementById('mazeTimer');
@@ -71,14 +82,32 @@ class EndlessMazeGame {
     this.uiOptimal = document.getElementById('optimalSteps');
     this.uiStreak = document.getElementById('bestStreak');
 
-    this.btnCamera = document.getElementById('btnCamera');
-    this.btnTheme = document.getElementById('btnTheme');
+    // Laps Panel
+    this.lapsList = document.getElementById('lapsList');
+    this.lapsEmptyState = document.getElementById('lapsEmptyState');
+    this.lapCountBadge = document.getElementById('lapCountBadge');
+
+    // Right Sidebar Controls & Top Right Theme/Sound
+    this.themeSelect = document.getElementById('themeSelect');
     this.btnSound = document.getElementById('btnSound');
+    this.soundIcon = document.getElementById('soundIcon');
+    this.soundLabel = document.getElementById('soundLabel');
     this.btnHint = document.getElementById('btnHint');
+    this.btnCamera = document.getElementById('btnCamera');
     this.btnReset = document.getElementById('btnReset');
     this.btnHelp = document.getElementById('btnHelp');
     this.helpModal = document.getElementById('helpModal');
     this.closeHelp = document.getElementById('closeHelp');
+
+    // Mobile Elements
+    this.mobileMazeNumber = document.getElementById('mobileMazeNumber');
+    this.mobileMazeTimer = document.getElementById('mobileMazeTimer');
+    this.btnMobileLaps = document.getElementById('btnMobileLaps');
+    this.btnMobileSound = document.getElementById('btnMobileSound');
+    this.btnMobileHint = document.getElementById('btnMobileHint');
+    this.btnMobileCamera = document.getElementById('btnMobileCamera');
+    this.btnMobileReset = document.getElementById('btnMobileReset');
+    this.sidebarLeft = document.getElementById('sidebarLeft');
 
     // Virtual D-pad
     this.dpadUp = document.getElementById('dpadUp');
@@ -86,14 +115,25 @@ class EndlessMazeGame {
     this.dpadDown = document.getElementById('dpadDown');
     this.dpadLeft = document.getElementById('dpadLeft');
 
-    // Button Listeners
-    this.btnCamera?.addEventListener('click', () => this.toggleCameraMode());
-    this.btnTheme?.addEventListener('click', () => this.cycleTheme());
+    // Listeners: Theme Menu & Sound in Top Right
+    this.themeSelect?.addEventListener('change', (e) => this.applyTheme(e.target.value));
     this.btnSound?.addEventListener('click', () => this.toggleSound());
-    this.btnHint?.addEventListener('click', () => this.toggleHint());
+    this.btnMobileSound?.addEventListener('click', () => this.toggleSound());
+
+    // Action Buttons
+    this.btnHint?.addEventListener('click', () => this.triggerHint());
+    this.btnMobileHint?.addEventListener('click', () => this.triggerHint());
+    this.btnCamera?.addEventListener('click', () => this.toggleCameraMode());
+    this.btnMobileCamera?.addEventListener('click', () => this.toggleCameraMode());
     this.btnReset?.addEventListener('click', () => this.restartCurrentMaze());
+    this.btnMobileReset?.addEventListener('click', () => this.restartCurrentMaze());
     this.btnHelp?.addEventListener('click', () => this.toggleHelpModal(true));
     this.closeHelp?.addEventListener('click', () => this.toggleHelpModal(false));
+
+    // Mobile drawer toggle
+    this.btnMobileLaps?.addEventListener('click', () => {
+      this.sidebarLeft?.classList.toggle('mobile-open');
+    });
 
     // D-Pad Touch / Click (Supports instant tap and long-press)
     const bindDpad = (btn, dir) => {
@@ -114,6 +154,37 @@ class EndlessMazeGame {
     bindDpad(this.dpadLeft, 3);
 
     this.updateHUD();
+  }
+
+  applyTheme(themeKey) {
+    if (!THEMES[themeKey]) themeKey = 'obsidian';
+    const theme = THEMES[themeKey];
+    this.renderer.setTheme(themeKey);
+    localStorage.setItem('aether_theme', themeKey);
+
+    if (this.themeSelect) {
+      this.themeSelect.value = themeKey;
+    }
+
+    // Dynamically update CSS custom properties to match active theme
+    const root = document.documentElement;
+    root.style.setProperty('--bg-color', theme.bg);
+    root.style.setProperty('--panel-bg', theme.panelBg);
+    root.style.setProperty('--panel-border', theme.panelBorder);
+    root.style.setProperty('--text-main', theme.textMain);
+    root.style.setProperty('--text-muted', theme.textMuted);
+    root.style.setProperty('--accent-color', theme.accent);
+    root.style.setProperty('--accent-glow', theme.wallGlow || 'rgba(56, 189, 248, 0.4)');
+
+    document.body.classList.toggle('light-theme', !theme.isDark);
+  }
+
+  cycleTheme() {
+    sound.playClick();
+    const themeKeys = Object.keys(THEMES);
+    const currentIndex = themeKeys.indexOf(this.renderer.themeKey);
+    const nextThemeKey = themeKeys[(currentIndex + 1) % themeKeys.length];
+    this.applyTheme(nextThemeKey);
   }
 
   startMove(dir) {
@@ -141,7 +212,7 @@ class EndlessMazeGame {
       else if (['arrowleft', 'a'].includes(key)) { this.startMove(3); e.preventDefault(); }
       else if (!e.repeat) {
         if (key === ' ' || key === 'c') { this.toggleCameraMode(); e.preventDefault(); }
-        else if (key === 'h') { this.toggleHint(); e.preventDefault(); }
+        else if (key === 'h') { this.triggerHint(); e.preventDefault(); }
         else if (key === 't') { this.cycleTheme(); e.preventDefault(); }
         else if (key === 'm') { this.toggleSound(); e.preventDefault(); }
         else if (key === 'r') { this.restartCurrentMaze(); e.preventDefault(); }
@@ -210,11 +281,19 @@ class EndlessMazeGame {
     this.player.interpolatedX = this.maze.start.x;
     this.player.interpolatedY = this.maze.start.y;
 
-    // Reset Trail & Stats for this maze
+    // Reset Trail & Stats for this new maze
     this.trailHistory = [{ x: this.player.x, y: this.player.y }];
     this.mazeSteps = 0;
+
+    // RESET TIMER FOR NEW MAZE (Like laps in a stopwatch clock!)
     this.currentMazeTime = 0;
+
+    // Reset hint state
+    this.hintRemaining = 0;
+    this.isHintActive = false;
     this.renderer.showHint = false;
+    this.renderer.hintAlpha = 1.0;
+    this.resetHintButtonUI();
     this.updateSolutionHint();
 
     // Instantly snap camera to fit screen on maze start
@@ -289,6 +368,9 @@ class EndlessMazeGame {
     this.mazesSolved++;
     this.totalMazesSolved++;
 
+    // Record completed lap before resetting timer (Like laps in a clock)
+    this.recordLap(this.mazesSolved, this.currentMazeTime, this.mazeSteps);
+
     if (this.mazesSolved > this.bestStreak) {
       this.bestStreak = this.mazesSolved;
       localStorage.setItem('aether_best_streak', this.bestStreak.toString());
@@ -310,46 +392,137 @@ class EndlessMazeGame {
     }, 450);
   }
 
+  recordLap(lapNumber, timeInSeconds, stepCount) {
+    const lapData = {
+      number: lapNumber,
+      time: timeInSeconds,
+      formattedTime: this.formatTime(timeInSeconds),
+      steps: stepCount
+    };
+
+    // Prepend newest lap to the top of the list
+    this.laps.unshift(lapData);
+    this.renderLaps();
+  }
+
+  renderLaps() {
+    if (!this.lapsList) return;
+
+    if (this.laps.length === 0) {
+      if (this.lapsEmptyState) this.lapsEmptyState.style.display = 'flex';
+      this.lapsList.innerHTML = '';
+      if (this.lapCountBadge) this.lapCountBadge.textContent = '0 Laps';
+      return;
+    }
+
+    if (this.lapsEmptyState) this.lapsEmptyState.style.display = 'none';
+    if (this.lapCountBadge) this.lapCountBadge.textContent = `${this.laps.length} Lap${this.laps.length > 1 ? 's' : ''}`;
+
+    // Find fastest lap among all completed
+    let fastestTime = Infinity;
+    this.laps.forEach(lap => {
+      if (lap.time < fastestTime) fastestTime = lap.time;
+    });
+
+    let html = '';
+    this.laps.forEach(lap => {
+      const isFastest = this.laps.length > 1 && lap.time === fastestTime;
+      html += `
+        <div class="lap-item ${isFastest ? 'lap-fastest' : ''}">
+          <div class="lap-left">
+            <div class="lap-title-row">
+              <span class="lap-index">Lap #${lap.number}</span>
+              ${isFastest ? '<span class="lap-badge-best">⚡ BEST</span>' : ''}
+            </div>
+            <span class="lap-meta">${lap.steps} steps</span>
+          </div>
+          <span class="lap-time">${lap.formattedTime}</span>
+        </div>
+      `;
+    });
+
+    this.lapsList.innerHTML = html;
+  }
+
   updateSolutionHint() {
     if (!this.maze) return;
     this.renderer.hintPath = this.maze.solve({ x: this.player.x, y: this.player.y }, this.maze.exit);
   }
 
-  toggleHint() {
+  /**
+   * 5-Second Fading Hint:
+   * First 3.5s hold at full brightness, final 1.5s smoothly fade to 0.
+   * Lock button and show countdown.
+   */
+  triggerHint() {
+    // If already active or locked, prevent spam-clicking
+    if (this.hintRemaining > 0) return;
+
     sound.playClick();
-    this.renderer.showHint = !this.renderer.showHint;
-    if (this.renderer.showHint) {
-      this.updateSolutionHint();
+    this.hintRemaining = this.hintDuration;
+    this.isHintActive = true;
+    this.renderer.showHint = true;
+    this.renderer.hintAlpha = 1.0;
+    this.updateSolutionHint();
+
+    this.updateHintButtonUI();
+  }
+
+  resetHintButtonUI() {
+    if (this.btnHint) {
+      this.btnHint.disabled = false;
+      this.btnHint.classList.remove('locked');
+      this.btnHint.innerHTML = `<span class="btn-icon">💡</span><span class="btn-text">Hint</span>`;
     }
-    this.btnHint?.classList.toggle('active', this.renderer.showHint);
+    if (this.btnMobileHint) {
+      this.btnMobileHint.disabled = false;
+      this.btnMobileHint.classList.remove('locked');
+      this.btnMobileHint.textContent = '💡 Hint';
+    }
+  }
+
+  updateHintButtonUI() {
+    const text = `Hint (${this.hintRemaining.toFixed(1)}s)`;
+    if (this.btnHint) {
+      this.btnHint.disabled = true;
+      this.btnHint.classList.add('locked');
+      this.btnHint.innerHTML = `<span class="btn-icon">💡</span><span class="btn-text">Hint</span><span class="countdown">${this.hintRemaining.toFixed(1)}s</span>`;
+    }
+    if (this.btnMobileHint) {
+      this.btnMobileHint.disabled = true;
+      this.btnMobileHint.classList.add('locked');
+      this.btnMobileHint.textContent = `💡 ${text}`;
+    }
   }
 
   toggleCameraMode() {
     sound.playClick();
     this.renderer.cameraMode = this.renderer.cameraMode === 'overview' ? 'follow' : 'overview';
     localStorage.setItem('aether_camera_v2', this.renderer.cameraMode);
-    if (this.btnCamera) {
-      this.btnCamera.textContent = this.renderer.cameraMode === 'overview' ? '🔍 Follow Player' : '🗺️ Fit to Screen';
-    }
+    this.updateCameraBtn();
   }
 
-  cycleTheme() {
-    sound.playClick();
-    const themeKeys = Object.keys(THEMES);
-    const currentIndex = themeKeys.indexOf(this.renderer.themeKey);
-    const nextThemeKey = themeKeys[(currentIndex + 1) % themeKeys.length];
-    this.renderer.setTheme(nextThemeKey);
-    localStorage.setItem('aether_theme', nextThemeKey);
-    if (this.btnTheme) {
-      this.btnTheme.textContent = `🎨 ${this.renderer.theme.name}`;
+  updateCameraBtn() {
+    const isOverview = this.renderer.cameraMode === 'overview';
+    if (this.btnCamera) {
+      this.btnCamera.innerHTML = isOverview
+        ? `<span class="btn-icon">🔍</span><span class="btn-text">Follow Player</span>`
+        : `<span class="btn-icon">🗺️</span><span class="btn-text">Fit to Screen</span>`;
+    }
+    if (this.btnMobileCamera) {
+      this.btnMobileCamera.textContent = isOverview ? '🔍 Follow' : '🗺️ Fit';
     }
   }
 
   toggleSound() {
     const isEnabled = sound.toggleSound();
     if (this.btnSound) {
-      this.btnSound.textContent = isEnabled ? '🔊 Sound On' : '🔇 Muted';
       this.btnSound.classList.toggle('muted', !isEnabled);
+      if (this.soundIcon) this.soundIcon.textContent = isEnabled ? '🔊' : '🔇';
+      if (this.soundLabel) this.soundLabel.textContent = isEnabled ? 'Sound' : 'Muted';
+    }
+    if (this.btnMobileSound) {
+      this.btnMobileSound.textContent = isEnabled ? '🔊' : '🔇';
     }
   }
 
@@ -369,20 +542,21 @@ class EndlessMazeGame {
   }
 
   updateHUD() {
+    const currentLapFormatted = this.formatTime(this.currentMazeTime);
+    const totalFormatted = this.formatTime(this.totalTimeElapsed);
+
     if (this.uiSolvedCount) this.uiSolvedCount.textContent = this.mazesSolved;
-    if (this.uiTotalTimer) this.uiTotalTimer.textContent = this.formatTime(this.totalTimeElapsed);
-    if (this.uiMazeTimer) this.uiMazeTimer.textContent = this.formatTime(this.currentMazeTime);
+    if (this.uiTotalTimer) this.uiTotalTimer.textContent = totalFormatted;
+    if (this.uiMazeTimer) this.uiMazeTimer.textContent = currentLapFormatted;
+    if (this.mobileMazeTimer) this.mobileMazeTimer.textContent = currentLapFormatted;
     if (this.uiMazeNumber) this.uiMazeNumber.textContent = `#${this.mazesSolved + 1}`;
+    if (this.mobileMazeNumber) this.mobileMazeNumber.textContent = `#${this.mazesSolved + 1}`;
     if (this.uiMazeDim) this.uiMazeDim.textContent = `${this.currentCols}×${this.currentRows}`;
     if (this.uiSteps) this.uiSteps.textContent = this.mazeSteps;
     if (this.uiOptimal && this.maze) this.uiOptimal.textContent = (this.maze.solutionLength - 1) || '-';
     if (this.uiStreak) this.uiStreak.textContent = this.bestStreak;
-    if (this.btnCamera) {
-      this.btnCamera.textContent = this.renderer.cameraMode === 'overview' ? '🔍 Follow Player' : '🗺️ Fit to Screen';
-    }
-    if (this.btnTheme) {
-      this.btnTheme.textContent = `🎨 ${this.renderer.theme.name}`;
-    }
+
+    this.updateCameraBtn();
   }
 
   loop(currentTime) {
@@ -397,11 +571,31 @@ class EndlessMazeGame {
       if (this.heldDirections.size > 0) {
         this.holdDelayTimer -= dt;
         if (this.holdDelayTimer <= 0) {
-          // Take the most recently pressed active direction
           const activeDirs = Array.from(this.heldDirections);
           const dir = activeDirs[activeDirs.length - 1];
           this.tryMove(dir);
           this.holdDelayTimer = this.repeatInterval;
+        }
+      }
+
+      // 5-Second Fading Hint:
+      // First 3.5s hold full brightness (alpha = 1.0)
+      // Final 1.5s smoothly fades away to 0 at 5.0s mark
+      if (this.hintRemaining > 0) {
+        this.hintRemaining = Math.max(0, this.hintRemaining - dt);
+        if (this.hintRemaining > this.hintFadeDuration) {
+          this.renderer.hintAlpha = 1.0;
+        } else {
+          this.renderer.hintAlpha = Math.max(0, this.hintRemaining / this.hintFadeDuration);
+        }
+
+        this.updateHintButtonUI();
+
+        if (this.hintRemaining <= 0) {
+          this.renderer.showHint = false;
+          this.renderer.hintAlpha = 0;
+          this.isHintActive = false;
+          this.resetHintButtonUI();
         }
       }
 
@@ -410,7 +604,6 @@ class EndlessMazeGame {
       this.player.interpolatedX += (this.player.x - this.player.interpolatedX) * lerpSpeed;
       this.player.interpolatedY += (this.player.y - this.player.interpolatedY) * lerpSpeed;
 
-      // Snap if close enough to prevent lingering sub-pixel offset
       if (Math.abs(this.player.x - this.player.interpolatedX) < 0.01) {
         this.player.interpolatedX = this.player.x;
       }
@@ -436,3 +629,4 @@ class EndlessMazeGame {
 window.addEventListener('DOMContentLoaded', () => {
   new EndlessMazeGame();
 });
+
